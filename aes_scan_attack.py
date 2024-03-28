@@ -215,5 +215,159 @@ def find_hamming_weight(list_of_bits):
             counter += 1
     return counter
 
+def binary_str_to_list(bin_str):
+    bin_list_str = list(bin_str)
+    for i in range(len(bin_list_str)):
+        bin_list_str[i] = int(bin_list_str[i])
+    return [x for x in bin_list_str]
+
+def build_binary_list_of_affected_bytes(affected_indices, bin_list):
+    bytes_affected = [-1] * len(affected_indices)
+    for i in range(len(affected_indices)):
+        bytes_affected[i] = bin_list[affected_indices[i]]
+    return [x for x in bytes_affected]
+
 def xor_function(t1, t2):
     return [x ^ y for x, y in zip(t1, t2)]
+
+#bytes 1, 6, 11, 16 -> f00, f10, f20, f30
+#bytes 4, 5, 10, 15 -> f01, f11, f21, f31
+#bytes 3, 8, 9, 14 -> f02, f12, f22, f32
+#bytes 2, 7, 12, 13 -> f03, f13, f23, f33
+
+affected_bytes_mapping = {1: list(byte_1_indices),
+                          2: list(byte_2_indices),
+                          3: list(byte_8_indices),
+                          4: list(byte_4_indices),
+                          5: list(byte_4_indices),
+                          6: list(byte_1_indices),
+                          7: list(byte_2_indices),
+                          8: list(byte_8_indices),
+                          9: list(byte_8_indices),
+                          10: list(byte_4_indices),
+                          11: list(byte_1_indices),
+                          12: list(byte_2_indices),
+                          13: list(byte_2_indices),
+                          14: list(byte_8_indices),
+                          15: list(byte_4_indices),
+                          16: list(byte_1_indices)}
+
+hamming_weight_table = {
+    9: (226, 227),
+    12: (242, 243),
+    23: (122, 123),
+    24: (130, 131)
+}
+
+# print(affected_bytes_mapping)
+
+# byte_1 = bytes_2t[1][0]
+#
+# lst1 = build_binary_list_of_affected_bytes(affected_bytes_mapping[1],
+#                                           binary_str_to_list(bytes_2t[1][8]))
+# lst2 = build_binary_list_of_affected_bytes(affected_bytes_mapping[1],
+#                                           binary_str_to_list(
+#                                               bytes_2t_plus_1[1][8]))
+
+bytes_a_for_2t_results = {}
+bytes_a_for_2t_plus_1_results = {}
+bytes_b_for_2t_results = {}
+bytes_b_for_2t_plus_1_results = {}
+rk0_possibilities = {}
+for i in range(1, 17):
+    bytes_a_for_2t_results[i] = None
+    bytes_a_for_2t_plus_1_results[i] = None
+    bytes_b_for_2t_results[i] = None
+    bytes_b_for_2t_plus_1_results[i] = None
+    rk0_possibilities[i] = None
+
+# Step 1: Iterate through all the bytes, a_00 to a_33.
+for current_a in range(1, 17):
+    # Step 2a: Apply 2t for current a_ij byte
+    two_t_scan_chains = bytes_2t[current_a]
+    # Step 2b: Apply 2t+1 for current a_ij byte
+    two_t_plus_1_scan_chains = bytes_2t_plus_1[current_a]
+    # Step 3: Iterate from t = 0 to t = 127
+    for t in range(128):
+        lst1 = build_binary_list_of_affected_bytes(affected_bytes_mapping[
+                                                       current_a],
+                                                   binary_str_to_list(
+                                                       two_t_scan_chains[t]))
+        lst2 = build_binary_list_of_affected_bytes(affected_bytes_mapping[
+                                                       current_a],
+                                                   binary_str_to_list(
+                                                       two_t_plus_1_scan_chains[t]))
+        xor_result = xor_function(lst1, lst2)
+        # Step 4: If XOR result is in hamming weight table, determine b1 and b2
+        if find_hamming_weight(xor_result) in hamming_weight_table:
+            print("t:", t)
+            print(find_hamming_weight(xor_result))
+            b1, b2 = hamming_weight_table[find_hamming_weight(xor_result)]
+            bytes_a_for_2t_results[current_a] = 2 * t
+            bytes_a_for_2t_plus_1_results[current_a] = 2 * t + 1
+            bytes_b_for_2t_results[current_a] = b1
+            bytes_b_for_2t_plus_1_results[current_a] = b2
+            break
+
+def decimal_to_bit_list_8_bits(num):
+    bin_lst = [0] * 8
+    curr_index = 0
+    curr_power = 7
+    curr_num = num
+    while curr_num != 0:
+        if curr_num >= pow(2, curr_power):
+            bin_lst[curr_index] = 1
+            curr_num -= pow(2, curr_power)
+        curr_power -= 1
+        curr_index += 1
+    return [x for x in bin_lst]
+
+print(bytes_a_for_2t_results)
+print(bytes_a_for_2t_plus_1_results)
+print(bytes_b_for_2t_results)
+print(bytes_b_for_2t_plus_1_results)
+
+# Step 5: Determine round key byte RK0 as b1 XOR a1, and b2 XOR a2
+for byte in range(1, 17):
+    if rk0_possibilities[byte] is None:
+        rk0_possibilities[byte] = list()
+    # b1 XOR a1
+    a_2t_bin_lst_1 = decimal_to_bit_list_8_bits(bytes_a_for_2t_results[byte])
+    b_2t_bin_lst_1 = decimal_to_bit_list_8_bits(bytes_b_for_2t_results[byte])
+    rk0_v1 = xor_function(a_2t_bin_lst_1, b_2t_bin_lst_1)
+    rk0_possibilities[byte].append(rk0_v1)
+    # b2 XOR a2
+    a_2t_bin_lst_2 = decimal_to_bit_list_8_bits(
+        bytes_a_for_2t_plus_1_results[byte])
+    b_2t_bin_lst_2 = decimal_to_bit_list_8_bits(
+        bytes_b_for_2t_plus_1_results[byte])
+    rk0_v2 = xor_function(a_2t_bin_lst_2, b_2t_bin_lst_2)
+    rk0_possibilities[byte].append(rk0_v2)
+
+print(rk0_possibilities)
+# Step 6: Iterate through all possible RK0 values
+all_key_values = []
+# for i in range(2):
+#     curr_key = ""
+#     curr_key +=
+
+# print("----")
+# for i in range(128):
+#     lst1 = build_binary_list_of_affected_bytes(affected_bytes_mapping[7],
+#                                                binary_str_to_list(bytes_2t[
+#                                                                       7][i]))
+#     lst2 = build_binary_list_of_affected_bytes(affected_bytes_mapping[7],
+#                                                 binary_str_to_list(
+#                                                     bytes_2t_plus_1[7][i]))
+#
+#     if (find_hamming_weight(xor_function(lst1, lst2))) in \
+#             hamming_weight_table:
+#         print("i:", i)
+#         print(find_hamming_weight(xor_function(lst1, lst2)))
+#         break
+
+
+# print(lst1)
+# print(lst2)
+# print(xor_function(lst1, lst2))
+# print(find_hamming_weight(xor_function(lst1, lst2)))
