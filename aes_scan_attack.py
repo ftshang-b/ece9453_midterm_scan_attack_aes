@@ -331,22 +331,146 @@ print(bytes_b_for_2t_plus_1_results)
 for byte in range(1, 17):
     if rk0_possibilities[byte] is None:
         rk0_possibilities[byte] = list()
-    # b1 XOR a1
     a_2t_bin_lst_1 = decimal_to_bit_list_8_bits(bytes_a_for_2t_results[byte])
     b_2t_bin_lst_1 = decimal_to_bit_list_8_bits(bytes_b_for_2t_results[byte])
-    rk0_v1 = xor_function(a_2t_bin_lst_1, b_2t_bin_lst_1)
-    rk0_possibilities[byte].append(rk0_v1)
-    # b2 XOR a2
     a_2t_bin_lst_2 = decimal_to_bit_list_8_bits(
         bytes_a_for_2t_plus_1_results[byte])
     b_2t_bin_lst_2 = decimal_to_bit_list_8_bits(
         bytes_b_for_2t_plus_1_results[byte])
+
+
+
+    rk0_v1 = xor_function(a_2t_bin_lst_1, b_2t_bin_lst_1)
+    rk0_v3 = xor_function(a_2t_bin_lst_1, b_2t_bin_lst_2)
     rk0_v2 = xor_function(a_2t_bin_lst_2, b_2t_bin_lst_2)
-    rk0_possibilities[byte].append(rk0_v2)
+    rk0_v4 = xor_function(a_2t_bin_lst_2, b_2t_bin_lst_1)
+    if rk0_v1 not in rk0_possibilities[byte]:
+        rk0_possibilities[byte].append(rk0_v1)
+
+    if rk0_v2 not in rk0_possibilities[byte]:
+        rk0_possibilities[byte].append(rk0_v2)
+
+    if rk0_v3 not in rk0_possibilities[byte]:
+        rk0_possibilities[byte].append(rk0_v3)
+
+    if rk0_v4 not in rk0_possibilities[byte]:
+        rk0_possibilities[byte].append(rk0_v4)
 
 print(rk0_possibilities)
+
+def convert_to_str_bin_lst(bin_list):
+    str_list = [None] * len(bin_list)
+    for i in range(len(bin_list)):
+        str_list[i] = str(bin_list[i])
+    return [x for x in str_list]
+
+# Need to convert bin_list to hexadecimal characters
+def bin_list_to_hex_characters(bin_list):
+    hex_table = {"0000": "0",
+                 "0001": "1",
+                 "0010": "2",
+                 "0011": "3",
+                 "0100": "4",
+                 "0101": "5",
+                 "0110": "6",
+                 "0111": "7",
+                 "1000": "8",
+                 "1001": "9",
+                 "1010": "A",
+                 "1011": "B",
+                 "1100": "C",
+                 "1101": "D",
+                 "1110": "E",
+                 "1111": "F"}
+    bin_str_1 = "".join(convert_to_str_bin_lst(bin_list[0:4]))
+    bin_str_2 = "".join(convert_to_str_bin_lst(bin_list[4:]))
+    input_str = hex_table[bin_str_1] + hex_table[bin_str_2]
+    return input_str
+
+
+
 # Step 6: Iterate through all possible RK0 values
-all_key_values = []
+all_possible_keys = []
+for i in range(2):
+    curr_byte_1 = rk0_possibilities[1][i]
+    for j in range(2):
+        curr_byte_2 = rk0_possibilities[2][j]
+        for a in range(2):
+            curr_byte_3 = rk0_possibilities[3][a]
+            for b in range(2):
+                curr_byte_4 = rk0_possibilities[4][b]
+                for c in range(2):
+                    curr_byte_5 = rk0_possibilities[5][c]
+                    for d in range(2):
+                        curr_byte_6 = rk0_possibilities[6][d]
+                        for e in range(2):
+                            curr_byte_7 = rk0_possibilities[7][e]
+                            for f in range(2):
+                                curr_byte_8 = rk0_possibilities[8][f]
+                                for g in range(2):
+                                    curr_byte_9 = rk0_possibilities[9][g]
+                                    for h in range(2):
+                                        curr_byte_10 = rk0_possibilities[10][h]
+                                        for l in range(2):
+                                            curr_byte_11 = \
+                                                rk0_possibilities[11][l]
+                                            for m in range(2):
+                                                curr_byte_12 = \
+                                                    rk0_possibilities[12][m]
+                                                for n in range(2):
+                                                    curr_byte_13 = \
+                                                        rk0_possibilities[13][n]
+                                                    for o in range(2):
+                                                        curr_byte_14 = \
+                                                            rk0_possibilities[14][o]
+                                                        for p in range(2):
+                                                            curr_byte_15 = \
+                                                                rk0_possibilities[15][p]
+                                                            for q in range(2):
+                                                                curr_byte_16\
+                                                                    = \
+                                                                    rk0_possibilities[16][q]
+                                                                all_possible_keys.append(curr_byte_1 + curr_byte_2 + curr_byte_3 + curr_byte_4 + curr_byte_5 + curr_byte_6 + curr_byte_7 + curr_byte_8 + curr_byte_9 + curr_byte_10 + curr_byte_11 + curr_byte_12 + curr_byte_13 + curr_byte_14 + curr_byte_15 + curr_byte_16)
+
+def bit_to_hex_full_string(bin_list):
+    building_str = ""
+
+    for i in range(0, len(bin_list), 8):
+        building_str += bin_list_to_hex_characters(bin_list[i:i + 8])
+
+    return building_str
+
+hex_keys = []
+for val in all_possible_keys:
+    hex_keys.append(bit_to_hex_full_string(val))
+
+print(hex_keys)
+
+from aes_implementation import *
+plaintext = "0BADC0DEDEADC0DE0BADC0DEDEADC0DE"
+AESTest = AesFromScratch()
+
+aes_results = []
+counter = 0
+
+desired_key = None
+for key in hex_keys:
+    print("key #" + str(counter))
+    [tenRound, allkey] = AESTest.encrypt10round(plaintext, key)
+    prettyCipherText = ""
+    for byte in tenRound:
+        prettyCipherText += byte
+    if "7553F1319D628D075227785D730E7908" == prettyCipherText.upper():
+        desired_key = key
+        break
+    counter += 1
+
+print(desired_key)
+# for byte in rk0_possibilities:
+#     key_string += bin_list_to_hex_characters(rk0_possibilities[byte][0])
+
+# print(key_string)
+
 # for i in range(2):
 #     curr_key = ""
 #     curr_key +=
