@@ -89,7 +89,7 @@ def decimal_to_bit_list_8_bits(num):
 
 # ===== Find Input Indices =====
 input_scan_chains = []
-with open("input_scanchains.txt", 'r', encoding='utf-16') as f:
+with open("scan_chains/input_scanchains.txt", 'r', encoding='utf-16') as f:
     for line in f:
         input_scan_chains.append(line.rstrip())
 f.close()
@@ -102,14 +102,18 @@ for scan_chain in input_scan_chains:
             input_dict[bit_num] = i
             break
     bit_num += 1
-
 # Print results of Input Bit Locations
 tups = []
 for bit_num in input_dict:
     tup = (input_dict[bit_num], bit_num)
     tups.append(tup)
 tups.sort()
-print(tups)
+# tups used to print out scan output
+
+sorted_input_dict = {}
+for tup in tups:
+    sorted_input_dict[tup[0]] = tup[1]
+
 input_bits_all = []
 for key in input_dict:
     input_bits_all.append(input_dict[key])
@@ -125,45 +129,45 @@ for i in range(256):
 SCAN_TEST_PLAINTEXT = \
     "0010000010001001011010000110101000000001000000000000010000110000000111001000000000000011101000010000010000000010100100110010001010000100100110010100010000000000101110100101100000001001100000001000010001101000000100101000010010100001010100001000011100000000"
 
-byte_1_indices = find_byte_indices("byte1_scan_chain.txt")
-byte_2_indices = find_byte_indices("byte2_scan_chain.txt")
-byte_4_indices = find_byte_indices("byte4_scan_chain.txt")
-byte_8_indices = find_byte_indices("byte8_scan_chain.txt")
+byte_1_indices = find_byte_indices("scan_chains/byte1_scan_chain.txt")
+byte_2_indices = find_byte_indices("scan_chains/byte2_scan_chain.txt")
+byte_4_indices = find_byte_indices("scan_chains/byte4_scan_chain.txt")
+byte_8_indices = find_byte_indices("scan_chains/byte8_scan_chain.txt")
 
 byte_1_indices.sort()
 byte_2_indices.sort()
 byte_4_indices.sort()
 byte_8_indices.sort()
 
-print("byte_1:", byte_1_indices)
-print("byte_2:", byte_2_indices)
-print("byte_8:", byte_8_indices)
-print("byte_4:", byte_4_indices)
-
 affected_bytes = {}
 for index in byte_1_indices:
-    affected_bytes[index] = "data: f00, f10, f20, f30"
+    affected_bytes[index] = "bytes f00, f10, f20, f30"
 
 for index in byte_2_indices:
-    affected_bytes[index] = "data: f03, f13, f23, f33"
+    affected_bytes[index] = "bytes f03, f13, f23, f33"
 
 for index in byte_8_indices:
-    affected_bytes[index] = "data: f02, f12, f22, f32"
+    affected_bytes[index] = "bytes f02, f12, f22, f32"
 
 for index in byte_4_indices:
-    affected_bytes[index] = "data: f01, f11, f21, f31"
+    affected_bytes[index] = "bytes f01, f11, f21, f31"
 
 sorted_affected_bytes = {}
 for i in range(256):
     if i in not_input_indices:
         sorted_affected_bytes[i] = affected_bytes[i]
 
-test_bytes = []
-for key in sorted_affected_bytes:
-    print("scan[" + str(key) + "]: " + str(sorted_affected_bytes[key]))
-    test_bytes.append(sorted_affected_bytes[key])
-filename_2t = "aX_Y_2t.txt"
-filename_2t_plus_1 = "aX_Y_2t_plus_1.txt"
+found_scan_chain = {}
+for i in range(256):
+    if i in input_bits_all:
+        print("scan[" + str(i) + "]: input[" + str(sorted_input_dict[i]) + "]")
+    else:
+        print("scan[" + str(i) + "]: " + str(sorted_affected_bytes[i]))
+
+print("Finding RK0...please wait.")
+
+filename_2t = "scan_chains/aX_Y_2t.txt"
+filename_2t_plus_1 = "scan_chains/aX_Y_2t_plus_1.txt"
 
 bytes_2t = {}
 bytes_2t_plus_1 = {}
@@ -179,10 +183,10 @@ for col in range(4):
         filename_2t_plus_1_list = list(filename_2t_plus_1)
         row_str = str(row)
         col_str = str(col)
-        filename_2t_list[1] = row_str
-        filename_2t_list[3] = col_str
-        filename_2t_plus_1_list[1] = row_str
-        filename_2t_plus_1_list[3] = col_str
+        filename_2t_list[13] = row_str
+        filename_2t_list[15] = col_str
+        filename_2t_plus_1_list[13] = row_str
+        filename_2t_plus_1_list[15] = col_str
         filename_2t_str = "".join(filename_2t_list)
         filename_2t_plus_1_str = "".join(filename_2t_plus_1_list)
         with open(filename_2t_str, 'r', encoding='utf-16') as f:
@@ -354,9 +358,9 @@ hex_keys = []
 for val in all_possible_keys:
     hex_keys.append(bit_to_hex_full_string(val))
 
-from aes_implementation import *
+from AES import aes_implementation
 plaintext = "0BADC0DEDEADC0DE0BADC0DEDEADC0DE"
-AESTest = AesFromScratch()
+AESTest = aes_implementation.AesFromScratch()
 
 aes_results = []
 counter = 0
@@ -372,4 +376,4 @@ for key in hex_keys:
         break
     counter += 1
 
-print(desired_key)
+print("Found RK0:", desired_key)
