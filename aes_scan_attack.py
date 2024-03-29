@@ -102,13 +102,11 @@ for scan_chain in input_scan_chains:
             input_dict[bit_num] = i
             break
     bit_num += 1
-# Print results of Input Bit Locations
 tups = []
 for bit_num in input_dict:
     tup = (input_dict[bit_num], bit_num)
     tups.append(tup)
 tups.sort()
-# tups used to print out scan output
 
 sorted_input_dict = {}
 for tup in tups:
@@ -126,6 +124,7 @@ for i in range(256):
         not_input_indices.append(i)
 # ============================
 
+# ===== Find R Register Indices =====
 SCAN_TEST_PLAINTEXT = \
     "0010000010001001011010000110101000000001000000000000010000110000000111001000000000000011101000010000010000000010100100110010001010000100100110010100010000000000101110100101100000001001100000001000010001101000000100101000010010100001010100001000011100000000"
 
@@ -151,7 +150,9 @@ for index in byte_8_indices:
 
 for index in byte_4_indices:
     affected_bytes[index] = "bytes f01, f11, f21, f31"
+# ========================
 
+# ===== Printing Scan Layout Results to Console =====
 sorted_affected_bytes = {}
 for i in range(256):
     if i in not_input_indices:
@@ -163,6 +164,7 @@ for i in range(256):
         print("scan[" + str(i) + "]: input[" + str(sorted_input_dict[i]) + "]")
     else:
         print("scan[" + str(i) + "]: " + str(sorted_affected_bytes[i]))
+# ========================
 
 print("Finding RK0...please wait.")
 
